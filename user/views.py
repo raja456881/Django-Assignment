@@ -12,8 +12,8 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework_jwt.authentication import JSONWebTokenAuthentication
 from .serializer import UserRegistrationSerializer, UserLoginSerializer
 from .models import UserProfile
-
-
+from django.contrib import messages
+global messages
 def index(requset):
     return  render(requset, 'login.html')
 
@@ -27,16 +27,21 @@ class UserRegistrationView(CreateAPIView):
 
     def post(self, request):
         serializer = self.serializer_class(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        serializer.save()
-        status_code = status.HTTP_201_CREATED
-        response = {
-            'success' : 'True',
-            'status code' : status_code,
-            'message': 'User registered  successfully',
+        if request.data['password']==request.data['pass2'] and len(request.data['password'])<=8:
+
+            serializer.is_valid(raise_exception=True)
+            serializer.save()
+            status_code = status.HTTP_201_CREATED
+            response = {
+                'success' : 'True',
+                'status code' : status_code,
+                'message': 'User registered  successfully',
             }
 
-        return redirect("login")
+            return redirect("login")
+        else:
+            messages.error(request , "password much 8 digit")
+            return render (request, "resgister.html")
 
 
 class UserLoginView(RetrieveAPIView):
@@ -83,9 +88,7 @@ class UserProfileView(RetrieveAPIView):
                 'data': [{
                     'first_name': user_profile.first_name,
                     'last_name': user_profile.last_name,
-                    'phone_number': user_profile.phone_number,
-                    'age': user_profile.age,
-                    'gender': user_profile.gender,
+                    'age': user_profile.age
                     }]
                 }
 
